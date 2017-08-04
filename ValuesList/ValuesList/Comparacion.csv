@@ -1,0 +1,52 @@
+"Diferencia";"Aplicación.Nombre del campo";"Número de valores"
+Cambio de valores;"TM__Malicious_Code_Impact.TM__Malicious_Code_Impact_Property_Affected";De 10 campos a 4 campos.;
+Cambio de valores;"TM__Malicious_Code_Impact.TM__Malicious_Code_Impact_Objects_Affected";De 18 campos a 10 campos.;
+Cambio de valores;"TM__Sources.TM__Sources_Type";De 3 campos a 6 campos.;
+No encontrado;"Auditable_Entity_History.Auditable_Entity_History_Next_Audit_Date_Driver"
+No encontrado;"Projects__Client_Contacts.Projects__Client_Contacts_Role"
+No encontrado;"Projects__Team_Members.Projects__Team_Members_Role"
+No encontrado;"Milestone.Milestone_Status"
+No encontrado;"Milestone.Milestone_Name"
+No encontrado;"Issues.Issues_Priority"
+No encontrado;"Issues.Issues_Issue_Status"
+No encontrado;"Audit_Review_Comments.Audit_Review_Comments_Review_Comment_Cleared"
+No encontrado;"Audit_Review_Comments.Audit_Review_Comments_Submit_for_Clearance"
+No encontrado;"Audit_Review_Comments.Audit_Review_Comments_Submit_to_Tester"
+No encontrado;"Audit_Review_Comments.Audit_Review_Comments_Status"
+No encontrado;"Project_Tasks.Project_Tasks_Task"
+No encontrado;"Professional_Credentials.Professional_Certifications_MajorField"
+No encontrado;"Professional_Credentials.Professional_Certifications_Degree_Type"
+No encontrado;"Professional_Credentials.Professional_Certifications_Credential_Type"
+No encontrado;"Professional_Credentials.Professional_Certifications_CPE_Time_Frame"
+No encontrado;"CPE_Detailed_Activities.CPE_Detailed_Activities_CPE_Activity_Type"
+No encontrado;"BIA_Vital_Records_Impacts.BIA_Vital_Records_Impacts_Available_Offsite"
+No encontrado;"BIA_Vital_Records_Impacts.BIA_Vital_Records_Impacts_How_Important"
+No encontrado;"BCP_Alternate_Site_Reqs.BCP_Alternate_Site_Req_Type"
+No encontrado;"Timecards.Timecards_Approval_Status"
+No encontrado;"Timecards.Timecards_Submission_Status"
+No encontrado;"Resource_Scheduler.Resource_Scheduler_Prior_Week"
+No encontrado;"Project_Management.Project_Management_Type"
+No encontrado;"Project_Management.Project_Management_On_Site_Travel"
+No encontrado;"Project_Management.Project_Management_Phase"
+No encontrado;"Project_Management.Project_Management_Delivery_Status"
+No encontrado;"Project_Management.Project_Management_Risk_Rating"
+No encontrado;"Project_Management.Project_Management_Stage"
+No encontrado;"Expenses.Expenses_Approval_Status"
+No encontrado;"Expenses.Expenses_Submission_Status"
+No encontrado;"Expenses.Expenses_Payable_to"
+No encontrado;"Expenses.Expenses_Billable_to"
+No encontrado;"Telecom_Policies.Policy_SME_Review_Status"
+No encontrado;"Telecom_Policies.Policy_Policy_Review__Approval_Status"
+No encontrado;"Telecom_Policies.Policy_Workflow_Stage"
+No encontrado;"Telecom_Policies.Policy_Status"
+No encontrado;"Audit_Program_Library.Audit_Program_Library_Category"
+Cambio de valores;"Vulnerability_Scan_Results.Vulnerability_Scan_Results_Remediation_Status";De 3 campos a 4 campos.;
+No encontrado;"Vulnerability_Scan_Results.Vulnerability_Scan_Results_BugTraq_ID"
+No encontrado;"Vulnerability_Scan_Results.Vulnerability_Scan_Results_CVE_ID"
+Cambio de valores;"Vulnerabilities.Vulnerabilities_Remediation_Status";De 3 campos a 4 campos.;
+Cambio de valores;"enumAuthentication_Required";De 0 campos a 3 campos.;
+Cambio de valores;"enumAvailability_1";De 0 campos a 4 campos.;
+Cambio de valores;"enumLocal_Code";De 0 campos a 3 campos.;
+Cambio de valores;"Vulnerabilities.Vulnerabilities_Authentication";De 3 campos a 6 campos.;
+Cambio de valores;"Vulnerabilities.Vulnerabilities_Access_Complexity";De 3 campos a 4 campos.;
+Cambio de valores;"Vulnerabilities.Vulnerabilities_Access_Vector";De 3 campos a 5 campos.;

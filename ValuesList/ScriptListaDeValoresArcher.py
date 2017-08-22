@@ -26,6 +26,7 @@ def imprimir_en_csv(linea, archivo):
 
 
 def unir_archivos(parametros_de_entrada, archivo_salida):
+    print '---------------------------------------------------------'
     cortar_linea = re.compile(r'</xs:complexType><xs:simpleType')
     cortar_linea_2 = re.compile(r'</xs:complexType><xs:complexType')
     lista_archivos = []
@@ -47,7 +48,8 @@ def unir_archivos(parametros_de_entrada, archivo_salida):
                     line = re.sub('</xs:complexType><xs:complexType', r'</xs:complexType>\n<xs:complexType', line)
                 archivo_salida.write(line)
             print archivo + ' unido correctamente.'
-    print '\nRevise el archivo ' + archivo_salida.name + ' en la carpeta del script.\n'
+    print '\nArchivo unido' + ' ---> ' + archivo_salida.name
+    print '---------------------------------------------------------'
 
 def main():
     ayuda = """
@@ -232,6 +234,8 @@ def parsear_archivo(archivo_entrada, archivo_salida):
     tupla = []
     campo_nombre = []
     flag_imprimir_en_archivo = False
+    print '---------------------------------------------------------'
+    print 'Parseando '+ ' ---> ' + archivo_entrada.name 
     for line in archivo_entrada:
         cantidad_lineas += 1
         if len(line) < 10000:#and linea_valida is not None: #and linea_valida is not None:
@@ -279,7 +283,7 @@ def parsear_archivo(archivo_entrada, archivo_salida):
 
     print '\nCampos: ', cantidad_campos
     print 'Valores: ', + cantidad_valores
-    print 'Revise el archivo ' + archivo_salida.name + ' en la carpeta del script.\n'
+    print 'Archivo parseado ' + ' ---> ' + archivo_salida.name
 
 if __name__ == "__main__":
     main()

@@ -13,6 +13,17 @@ class XML(object):
         self.lista_permisos_automaticos = {}
         self.lista_permisos_manuales = {}
         self.archivo = None
+    '''
+    def obtener_flags(regla_automatica, regla_manual, permiso_manual): #Ver nombres
+        if regla_automatica in nodos.tag:
+            return True, False, False
+        else:
+            if regla_manual in nodos.tag:
+                return False, True, False
+            else:
+                if permiso_manual in nodos.tag:
+                    return False, False, True
+                    '''
 
     def parsear(self, archivo_entrada):
         self.archivo = archivo_entrada
@@ -20,14 +31,16 @@ class XML(object):
         root = tree.getroot()
         field_guid, permiso_manual, permiso_heredado, permiso_automatico, regla, nombre = None, None, None, None, None, None
         flag_permiso_manual, flag_permiso_automatico, flag_regla_permiso_manual = None, None, None
-        filter_type, id_condicion = None, None
+        lista_filter_type, lista_id_condicion = None, None
         lista_condiciones_manuales, lista_condiciones_automaticas = [], []
+        filtros_manuales = {}
         namespace = '{http://schemas.datacontract.org/2004/07/ArcherTech.Common.Domain}'
         for nodos in root.iter():
             if 'AutomaticOptionRule' in nodos.tag:
                 flag_permiso_automatico = True
                 flag_regla_permiso_manual = False
                 flag_permiso_manual = False
+                # flag_permiso_automatico, flag_regla_permiso_manual, flag_permiso_manual = 
             else:
                 if 'StateBaseOptionRule' in nodos.tag:
                     flag_permiso_automatico = False
@@ -39,7 +52,6 @@ class XML(object):
                         flag_regla_permiso_manual = False
                         flag_permiso_manual = True
 
-            
             if nodos.get('fieldGuid') is not None:
                 field_guid = nodos.get('fieldGuid')
             registro_heredado = nodos.get('InheritedFieldId')
@@ -60,10 +72,10 @@ class XML(object):
             creador_puede_actualizar = nodos.find(namespace + 'RecordCreatorUpdate')
             creador_puede_eliminar = nodos.find(namespace + 'RecordCreatorDelete')
             if nodos.find(namespace + 'FilterType') is not None:
-                filter_type = nodos.find(namespace + 'FilterType')
+                lista_filter_type = nodos.findall(namespace + 'FilterType')
             if nodos.find(namespace + 'Id') is not None:
-                id_condicion = nodos.find(namespace + 'Id')
-
+                lista_id_condicion = nodos.findall(namespace + 'Id')
+                
             # Permisos Heredados
             if field_guid is not None and registro_heredado is not None:
                 permiso_heredado = PermisoRegistroHeredado(field_guid)
@@ -75,42 +87,65 @@ class XML(object):
             
             # Regla Manual
             if flag_regla_permiso_manual:
-                # if 'FilterCriteria' in nodos.tag:
-                #    if  nodos.find(namespace + 'Id') is not None:
-                #        id_filter =  nodos.find(namespace + 'Id')
-                if filter_type is not None and id_condicion is not None:
-                    condicion = Condicion(id_condicion.text, filter_type.text)
-                    # condicion.imprimir()
-                    lista_condiciones_manuales.append(condicion)
+                if 'FilterCriteria' in nodos.tag:
+                    if nodos.find(namespace + 'Id') is not None:
+                        filter_id_condicion =  nodos.find(namespace + 'Id')
+                        filtros_manuales[filter_id_condicion.text] = None
+                        lista_condiciones_manuales = []
+                if lista_filter_type is not None and lista_id_condicion is not None:
+                    if len(lista_filter_type) > 1 and len(lista_id_condicion) > 1:
+                            for filter_type, id_condicion in lista_filter_type,lista_id_condicion:
+                                condicion = Condicion(id_condicion.text, filter_type.text)
+                                lista_condiciones_manuales.append(condicion)
+                    else: # Ver aca si se pluede hacer con un solo for
+                        if lista_filter_type and lista_id_condicion: # > 0
+                            filter_type = lista_filter_type.pop()
+                            id_condicion = lista_id_condicion.pop()
+                            condicion = Condicion(id_condicion.text, filter_type.text)
+                            lista_condiciones_manuales.append(condicion)
+                    filtros_manuales[filter_id_condicion.text] = lista_condiciones_manuales
+                    lista_filter_type = None
+                    lista_id_condicion = None
                 if field_guid is not None:
                     permiso_manual = PermisoRegistroManual(field_guid)
-                    permiso_manual.imprmir()
                     self.lista_permisos_manuales[field_guid] = permiso_manual
                     field_guid = None
-                if alias is not None and guid is not None and id_grupo is not None and puede_leer is not None and puede_actualizar is not None and puede_eliminar is not None:
-                    regla = Regla(guid.text, nombre.text, alias.text, puede_leer.text, puede_actualizar.text, puede_eliminar.text)
-                    # regla.imprimir()
-                    while lista_condiciones_manuales:
-                        condicion_manual = lista_condiciones_manuales.pop(0)
-                        regla.agregar_condicion(condicion_manual)
+                if alias is not None and filter_id is not None and guid is not None and id_grupo is not None and puede_leer is not None and puede_actualizar is not None and puede_eliminar is not None:
+                    regla = Regla(guid.text, nombre.text, alias.text)
+                    grupo = Grupo(id_grupo.text,
+                                  'Grupo/User', # No se puede determinar.
+                                  puede_leer.text,
+                                  puede_actualizar.text,
+                                  puede_eliminar.text)
+                    regla.agregar_grupo(grupo)
+                    if filtros_manuales.has_key(filter_id.text):
+                        lista_condiciones_manuales = filtros_manuales.get(filter_id.text)
+                        while lista_condiciones_manuales:
+                            condicion_manual = lista_condiciones_manuales.pop(0)
+                            regla.agregar_condicion(condicion_manual)
                     permiso_manual.agregar_regla(regla)
+                    
             else:
                 if flag_permiso_manual:
                     if puede_actualizar is not None and puede_eliminar is not None and mostrar_usuarios is not None and es_cascada is not None and es_default is not None:
-                            grupo = Grupo(id_grupo.text,
-                                        'Grupo/User', # No se puede determinar.
-                                        puede_actualizar.text,
-                                        puede_eliminar.text,
-                                        mostrar_usuarios.text,
-                                        es_cascada.text,
-                                        es_default)
-                            if field_guid in self.lista_permisos_manuales:
-                                permiso_manual = self.lista_permisos_manuales[field_guid]
-                            else:
-                                permiso_manual = PermisoRegistroManual(field_guid)
-                                self.lista_permisos_manuales[field_guid] = permiso_manual
-                            permiso_manual.agregar_grupo(grupo)
-
+                        grupo = Grupo(id_grupo.text,
+                                      'Grupo/User', # No se puede determinar.
+                                      'true',
+                                      puede_actualizar.text,
+                                      puede_eliminar.text,
+                                      mostrar_usuarios.text,
+                                      es_cascada.text,
+                                      es_default)
+                        if field_guid in self.lista_permisos_manuales:
+                            permiso_manual = self.lista_permisos_manuales[field_guid]
+                        else:
+                            permiso_manual = PermisoRegistroManual(field_guid)
+                            self.lista_permisos_manuales[field_guid] = permiso_manual
+                        permiso_manual.agregar_grupo(grupo)
+        for permiso in self.lista_permisos_manuales:
+            permiso_manual = self.lista_permisos_manuales.get(permiso)
+            permiso_manual.imprimir()
+            os.system('pause')
 
 class PermisoRegistro(object):
     def __init__(self, field_guid):
@@ -176,29 +211,28 @@ class PermisoRegistroManual(PermisoRegistro, object):
         self.field_guid = field_guid
         self.id_ = None
 
-    def imprmir(self): # Ver
-        print '\nPermiso Manual:\n' + self.field_guid + '\n-------------------\n'
-        for grupo in self.lista_grupos:
-            grupo.imprimir()
-        print '\n ------------- \n'
-        for regla in self.lista_reglas:
-            regla.imprimir()
-
     def agregar_id(self,
                    id_):
         self.id_ = id_
 
-
+    def imprimir(self): # Ver
+        print 'Permiso Manual: ' + self.field_guid
+        for grupo in self.lista_grupos:
+            grupo.imprimir()
+        for regla in self.lista_reglas:
+            regla.imprimir()
+        print '\n ------------- \n'
+    
 class Regla(object):
-    def __init__(self, guid, nombre, alias, puede_leer, puede_actualizar, puede_eliminar):
+    def __init__(self, guid, nombre, alias):
         self.lista_condiciones = [] # Lista de filter_types
         self.lista_grupos = []
         self.guid = guid
         self.nombre = nombre
         self.alias = alias
-        self.puede_leer = puede_leer
-        self.puede_actualizar = puede_actualizar
-        self.puede_eliminar = puede_eliminar
+        #self.puede_leer = puede_leer
+        #self.puede_actualizar = puede_actualizar
+        #self.puede_eliminar = puede_eliminar
 
     def agregar_grupo(self, grupo):
         self.lista_grupos.append(grupo)
@@ -219,14 +253,13 @@ class Regla(object):
             grupo.imprimir()
 
 
-
 class Grupo(object):
     def __init__(self,
                  id_,
                  tipo,
-                 puede_eliminar,
+                 puede_leer, # Ver acá
                  puede_actualizar,
-                 puede_leer=None,
+                 puede_eliminar,
                  mostrar_usuarios=None,
                  es_cascada=None,
                  es_default=None):
@@ -240,16 +273,17 @@ class Grupo(object):
         self.es_default = es_default
 
     def imprimir(self):
-        print 'Grupo -> ID {0}: {1},{2},{3}\n'.format(self.id_, self.puede_leer, self.puede_actualizar, self.puede_eliminar)
+        print '\tGrupo/User {0}: {1},{2},{3}\n'.format(self.id_, self.puede_leer, self.puede_actualizar, self.puede_eliminar)
 
 
 class Condicion(object):
     def __init__(self, id_, filter_type):
         self.filter_type = filter_type
         self.id_ = id_
+        #self.filter_id = filter_id
 
     def imprimir(self):
-        print 'Condicion -> ID: {0}\t Tipo: {1}.\n'.format(self.id_, self.filter_type)
+        print 'Condicion {0} -> {1}.\n'.format(self.id_, self.filter_type)
 
 def unir_archivos(parametros_de_entrada, archivo_salida):
     print '---------------------------------------------------------'
@@ -314,15 +348,15 @@ def main():
                       dest='salida',
                       help='El archivo DataDrivenEvent.xml del paquete migrado.')
     (options, args) = parser.parse_args()
-    if options.entrada and options.salida:
+    if not options.entrada and not options.salida: # Cambiar aca
         #ruta_archivo_origen = obtener_ruta_del_archivo(sys.argv[2], 'levelDisplay')
         # if len(ruta_archivo_origen) > 1:
-        with open('levelDisplay_unido.out', 'w+') as archivo_origen_unido:
-            unir_archivos(sys.argv[2], archivo_origen_unido)
-            archivo_origen_unido.close()
-            archivo_origen_unido = open('levelDisplay_unido.out', 'r')
-            primer_archivo_xml = XML()
-            primer_archivo_xml.parsear(archivo_origen_unido)
+        #with open('levelDisplay_unido.out', 'w+') as archivo_origen_unido:
+            # unir_archivos(sys.argv[2], archivo_origen_unido)  # Cambiar aca
+            # archivo_origen_unido.close()                      # Cambiar aca
+        archivo_origen_unido = open('levelDisplay_unido.out', 'r')
+        primer_archivo_xml = XML()
+        primer_archivo_xml.parsear(archivo_origen_unido)
     else:
         print 'Error con los parametros de entrada.\n' \
               'Ingrese -i para la carpeta del paquete generado antes de la' \

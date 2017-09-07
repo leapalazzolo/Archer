@@ -33,14 +33,13 @@ class XML(object):
         flag_permiso_manual, flag_permiso_automatico, flag_regla_permiso_manual = None, None, None
         lista_filter_type, lista_id_condicion = None, None
         lista_condiciones_manuales, lista_condiciones_automaticas = [], []
-        filtros_manuales = {}
+        filtros_manuales, filtros_automaticos = {} , {}
         namespace = '{http://schemas.datacontract.org/2004/07/ArcherTech.Common.Domain}'
         for nodos in root.iter():
             if 'AutomaticOptionRule' in nodos.tag:
                 flag_permiso_automatico = True
                 flag_regla_permiso_manual = False
                 flag_permiso_manual = False
-                # flag_permiso_automatico, flag_regla_permiso_manual, flag_permiso_manual = 
             else:
                 if 'StateBaseOptionRule' in nodos.tag:
                     flag_permiso_automatico = False
@@ -83,20 +82,19 @@ class XML(object):
                 field_guid = None
             if registro_heredado is not None:
                 permiso_heredado.agregar_permiso_heredado(registro_heredado)
-            # Fin Permisos Heredados
-            
+            # Fin Permisos Heredados            
             # Regla Manual
             if flag_regla_permiso_manual:
                 if 'FilterCriteria' in nodos.tag:
-                    if nodos.find(namespace + 'Id') is not None:
+                    if nodos.find(namespace + 'Id') is not None: #Se podria sacar
                         filter_id_condicion =  nodos.find(namespace + 'Id')
                         filtros_manuales[filter_id_condicion.text] = None
                         lista_condiciones_manuales = []
                 if lista_filter_type is not None and lista_id_condicion is not None:
                     if len(lista_filter_type) > 1 and len(lista_id_condicion) > 1:
-                            for filter_type, id_condicion in lista_filter_type,lista_id_condicion:
-                                condicion = Condicion(id_condicion.text, filter_type.text)
-                                lista_condiciones_manuales.append(condicion)
+                        for filter_type, id_condicion in lista_filter_type,lista_id_condicion:
+                            condicion = Condicion(id_condicion.text, filter_type.text)
+                            lista_condiciones_manuales.append(condicion)
                     else: # Ver aca si se pluede hacer con un solo for
                         if lista_filter_type and lista_id_condicion: # > 0
                             filter_type = lista_filter_type.pop()
@@ -124,7 +122,6 @@ class XML(object):
                             condicion_manual = lista_condiciones_manuales.pop(0)
                             regla.agregar_condicion(condicion_manual)
                     permiso_manual.agregar_regla(regla)
-                    
             else:
                 if flag_permiso_manual:
                     if puede_actualizar is not None and puede_eliminar is not None and mostrar_usuarios is not None and es_cascada is not None and es_default is not None:
@@ -142,11 +139,57 @@ class XML(object):
                             permiso_manual = PermisoRegistroManual(field_guid)
                             self.lista_permisos_manuales[field_guid] = permiso_manual
                         permiso_manual.agregar_grupo(grupo)
-        for permiso in self.lista_permisos_manuales:
-            permiso_manual = self.lista_permisos_manuales.get(permiso)
-            permiso_manual.imprimir()
+                else:
+                    if flag_permiso_automatico:
+                        permiso_automatico = PermisoRegistroAutomatico(field_guid)
+                        self.lista_permisos_automaticos[field_guid] = permiso_automatico
+                        # regla = None
+                        if creador_puede_leer is not None and creador_puede_actualizar is not None and creador_puede_eliminar is not None:
+                            permiso_automatico.cargar_datos(alias.text, nombre.text, guid.text, filter_id.text, creador_puede_leer.text, creador_puede_actualizar.text, creador_puede_eliminar.text)
+                            print guid.text
+                        if 'FilterCriteria' in nodos.tag:                           # ERROR queda en None
+                            regla = Regla(field_guid)
+                            print field_guid
+                            permiso_automatico.agregar_regla(regla)
+                            if nodos.find(namespace + 'Id') is not None:
+                                filter_id_condicion =  nodos.find(namespace + 'Id')
+                                # filtros_automaticos[filter_id_condicion.text] = None
+                                # lista_condiciones_automaticas = []
+                        if lista_filter_type is not None and lista_id_condicion is not None:
+                            if len(lista_filter_type) > 1 and len(lista_id_condicion) > 1:
+                                for filter_type, id_condicion in lista_filter_type,lista_id_condicion:
+                                    condicion = Condicion(id_condicion.text, filter_type.text)
+                                    regla.agregar_condicion(condicion)
+                                    # lista_condiciones_automaticas.append(condicion)
+                            else: # Ver aca si se pluede hacer con un solo for
+                                if lista_filter_type and lista_id_condicion: # > 0
+                                    filter_type = lista_filter_type.pop()
+                                    id_condicion = lista_id_condicion.pop()
+                                    condicion = Condicion(id_condicion.text, filter_type.text)
+                                    # lista_condiciones_automaticas.append(condicion)
+                                    regla.agregar_condicion(condicion)
+                            # filtros_automaticos[filter_id_condicion.text] = lista_condiciones_automaticas
+                            #regla = None
+                            lista_filter_type = None
+                            lista_id_condicion = None
+                        if puede_actualizar is not None and puede_eliminar is not None and mostrar_usuarios is not None and es_cascada is not None and es_default is not None:
+                            grupo = Grupo(id_grupo.text,
+                                            'Grupo/User', # No se puede determinar.
+                                            'true',
+                                            puede_actualizar.text,
+                                            puede_eliminar.text,
+                                            mostrar_usuarios.text,
+                                            es_cascada.text,
+                                            es_default)
+                        if regla is not None:
+                            regla.agregar_grupo(grupo)
+                        else:
+                            permiso_automatico.agregar_grupo(grupo)
+        for permiso in self.lista_permisos_automaticos:
+            permiso_auto = self.lista_permisos_automaticos.get(permiso)
+            permiso_auto.imprimir()
             os.system('pause')
-
+# Error : Ver lo de la herencia del campo
 class PermisoRegistro(object):
     def __init__(self, field_guid):
         self.field_guid = field_guid
@@ -176,16 +219,26 @@ class PermisoRegistroHeredado(PermisoRegistro, object):
 
 class PermisoRegistroAutomatico(PermisoRegistro, object):
     def __init__(self,
-                 field_guid,
-                 alias,
-                 nombre,
-                 guid,
-                 filter_id,
-                 creador_puede_eliminar,
-                 creador_puede_leer,
-                 creador_puede_actualizar
+                 field_guid
                 ):
         PermisoRegistro.__init__(self, field_guid)
+        self.alias = None
+        self.nombre = None
+        self.guid = None
+        self.filter_id = None
+        self.creador_puede_eliminar = None
+        self.creador_puede_leer = None
+        self.creador_puede_actualizar = None
+
+    def cargar_datos(self,
+                     alias,
+                     nombre,
+                     guid,
+                     filter_id,
+                     creador_puede_leer,
+                     creador_puede_actualizar,
+                     creador_puede_eliminar
+                    ):
         self.alias = alias
         self.nombre = nombre
         self.guid = guid
@@ -193,7 +246,6 @@ class PermisoRegistroAutomatico(PermisoRegistro, object):
         self.creador_puede_eliminar = creador_puede_eliminar
         self.creador_puede_leer = creador_puede_leer
         self.creador_puede_actualizar = creador_puede_actualizar
-
 
     def imprimir(self): # Ver
         texto = 'Permiso Automatico:\n' + self.guid + '\n-------------------\n'
@@ -224,7 +276,7 @@ class PermisoRegistroManual(PermisoRegistro, object):
         print '\n ------------- \n'
     
 class Regla(object):
-    def __init__(self, guid, nombre, alias):
+    def __init__(self, guid, nombre=None, alias=None):
         self.lista_condiciones = [] # Lista de filter_types
         self.lista_grupos = []
         self.guid = guid
